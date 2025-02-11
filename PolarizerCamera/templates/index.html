@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>馬達控制介面</title>
+</head>
+<body>
+    <h1>馬達控制介面</h1>
+    <form action="/motor" method="post">
+        <div>
+            <label for="steps">步數 (-s)：</label>
+            <!-- 預設值從後端傳入的 steps -->
+            <input type="number" id="steps" name="steps" value="{{ steps }}" >
+        </div>
+        <div>
+            <label for="speed">轉速 (-p, pps)：</label>
+            <!-- 預設值從後端傳入的 speed -->
+            <input type="number" id="speed" name="speed" value="{{ speed }}" >
+        </div>
+        <br>
+        <!-- 根據按鈕的 name 與 value 決定要執行正轉或反轉 -->
+        <button type="submit" name="action" value="reverse">反轉</button>
+        <button type="submit" name="action" value="forward">正轉</button>
+        <button type="submit" name="action" value="Previous">上一個</button>
+        <button type="submit" name="action" value="Next">下一個</button>
+        
+    </form>
+    <h2>實時影像串流</h2>
+    <button class="button stop" onclick="saveimg()">拍攝影像</button>
+    <br>
+    <table border="1">
+        <tr>
+            <th>I0</th>
+            <th>I90</th>
+        </tr>
+        <tr>
+            <th>I45</th>
+            <th>I135</th>
+        </tr>
+    </table>
+    <img src="{{ url_for('video_feed') }}" width="612" height="512" />
+    <br>
+    <script>
+        function saveimg() {
+            fetch('/saveimg', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('完成');
+                    window.location.reload();  // 刷新頁面，停止影像顯示
+                } else {
+                    alert('失敗');
+                }
+            })
+            .catch(error => {
+                alert('失敗');
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>

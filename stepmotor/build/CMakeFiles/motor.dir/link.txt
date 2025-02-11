@@ -1,0 +1,1 @@
+/usr/bin/aarch64-linux-gnu-gcc -g CMakeFiles/motor.dir/src/motor.c.o -o /home/defu/nfs/T10_PolarizerCamera/bin/motor  /home/defu/nfs/T10_PolarizerCamera/lib/libbcm2835.a 

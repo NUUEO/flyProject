@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/defu/nfs/T10_PolarizerCamera/build",
+  "command": "/usr/bin/aarch64-linux-gnu-gcc  -I/home/defu/nfs/T10_PolarizerCamera/include -g -std=gnu11 -o CMakeFiles/motor.dir/src/motor.c.o -c /home/defu/nfs/T10_PolarizerCamera/src/motor.c",
+  "file": "/home/defu/nfs/T10_PolarizerCamera/src/motor.c",
+  "output": "CMakeFiles/motor.dir/src/motor.c.o"
+}
+]

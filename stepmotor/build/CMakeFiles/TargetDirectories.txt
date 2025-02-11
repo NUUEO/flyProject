@@ -1,0 +1,3 @@
+/home/defu/nfs/T10_PolarizerCamera/build/CMakeFiles/motor.dir
+/home/defu/nfs/T10_PolarizerCamera/build/CMakeFiles/edit_cache.dir
+/home/defu/nfs/T10_PolarizerCamera/build/CMakeFiles/rebuild_cache.dir

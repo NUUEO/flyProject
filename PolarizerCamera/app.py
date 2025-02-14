@@ -35,11 +35,12 @@ def index():
     speed = request.args.get('speed', "600")
     # 請建立一個 index.html 模板，至少包含一個顯示串流影像的 <img> 標籤，例如：
     # <img src="{{ url_for('video_feed') }}" style="width:100%;max-width:612px;">
-    return render_template('index.html', steps=steps, speed=speed)
+    return render_template('index.html', steps=steps, speed=speed,colorfilter=colorfilter, item=item)
 
 @app.route('/video_feed')
 def video_feed():
     cam = get_camera()
+    global colorfilter, item
     return Response(cam.http_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -77,8 +78,12 @@ def motor_control():
     except subprocess.CalledProcessError as e:
         print("馬達命令執行失敗：", e)
     
-    return redirect(url_for('index', steps=steps, speed=speed))
-
+    #return redirect(url_for('index', steps=steps, speed=speed))
+    return '',204
+@app.route('/get_filter_status')
+def get_filter_status():
+    global colorfilter, item
+    return {'current_filter': colorfilter[item]}
 @app.route('/saveimg', methods=['POST'])
 def saveimg():
     global colorfilter
@@ -87,7 +92,6 @@ def saveimg():
     cam.save(colorfilter[item])
     print(colorfilter[item])
     return jsonify({'status': 'success', 'message': '影像已儲存'}), 200
-
 if __name__ == '__main__':
     try:
         # 若硬體容易受多進程存取影響，建議關閉自動重載

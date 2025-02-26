@@ -31,7 +31,7 @@ def get_camera():
 
 @app.route('/')
 def index():
-    steps = request.args.get('steps', "512")
+    steps = request.args.get('steps', "84")
     speed = request.args.get('speed', "600")
     # 請建立一個 index.html 模板，至少包含一個顯示串流影像的 <img> 標籤，例如：
     # <img src="{{ url_for('video_feed') }}" style="width:100%;max-width:612px;">
@@ -48,10 +48,16 @@ def video_feed():
 def motor_control():
     global colorfilter
     global item
-    action = request.form.get('action')
-    steps = request.form.get('steps', "50")
-    speed = request.form.get('speed', "600")
+    data = request.get_json()
+    action = data.get("action")
+    steps = data.get("steps")
+    speed = data.get("speed")
 
+    if action not in ["reverse", "forward", "Previous", "Next"]:
+        return jsonify({"status": "error", "message": "無效的指令"}), 400
+
+    # 這裡可以加入控制馬達的程式碼，例如：
+    print(f"執行動作: {action}, 步數: {steps}, 速度: {speed}")
     if action == 'reverse':
         direction = "1"
     elif action == 'forward':
@@ -75,11 +81,11 @@ def motor_control():
     
     try:
         subprocess.run(command, check=True)
+        
     except subprocess.CalledProcessError as e:
         print("馬達命令執行失敗：", e)
-    
-    #return redirect(url_for('index', steps=steps, speed=speed))
-    return '',204
+    return jsonify({"status": "success", "message": f"{action} 執行成功！步數: {steps}, 速度: {speed}"}),200
+
 @app.route('/get_filter_status')
 def get_filter_status():
     global colorfilter, item

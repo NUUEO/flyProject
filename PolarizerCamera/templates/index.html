@@ -6,12 +6,15 @@
 </head>
 
 <body>
-    <h1>實時影像串流</h1>
+    <h3>實時影像串流</3>
     <div>
         <label for="current_filter">目前濾鏡狀態：</label>
         <p id="current_filter">{{ colorfilter[item] }}</p>
+        <label for="folder_name">備份資料夾名稱：</label>
+        <input type="text" id="folder_name" placeholder="請輸入資料夾名稱">
     </div>
     <button class="button stop" onclick="saveimg()">拍攝影像</button>
+    <button type="button" onclick="sync()">備份</button>
     <br>
     <table border="1">
         <tr>
@@ -25,36 +28,8 @@
     </table>
     <img src="{{ url_for('video_feed') }}" width="612" height="512" />
     <br>
-    <script>
-        function saveimg() {
-            fetch('/saveimg', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert('完成');
-                    window.location.reload();  // 刷新頁面，停止影像顯示
-                } else {
-                    alert('失敗');
-                }
-            })
-            .catch(error => {
-                alert('失敗');
-                console.error(error);
-            });   
-        }
-
-        function updateFilterStatus() {
-        fetch('/get_filter_status')  // 向後端請求目前的濾鏡狀態
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("current_filter").textContent = data.current_filter; // 更新畫面
-        })
-        .catch(error => console.error('Error:', error));
-        }
-        
-    </script>
     
-    <h1>馬達控制介面</h1>
+    <h3>馬達控制介面</h3>
     
     <form id="motor-form">
         <div>
@@ -72,27 +47,76 @@
         <br>
         <button type="button" onclick="sendMotorCommand('Previous')">上一個</button>
         <button type="button" onclick="sendMotorCommand('Next')">下一個</button>
+    
+        <br>
+        <button type="button" onclick="shutdown()">關機</button>
     </form>
     
     <script>
-    function sendMotorCommand(action) {
-        // 取得 input 內的數值
-        const steps = document.getElementById("steps").value;
-        const speed = document.getElementById("speed").value;
-    
-        // 發送 AJAX 請求到 Flask
-        fetch("/motor", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: action, steps: steps, speed: speed })  // 將資料封裝成 JSON
-        })
-        .then(response => response.json())  // 解析回傳的 JSON
-        .then(data => {
-            console.log("Server Response:", data);
-            alert(`伺服器回應: ${data.message}`);  // 顯示回應訊息
-        })
-        .catch(error => console.error("Error:", error));
-    }
+        function updateFilterStatus() {
+            fetch('/get_filter_status')  // 從後端獲取最新濾鏡狀態
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("current_filter").textContent = data.current_filter;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // 傳送馬達控制指令
+        function sendMotorCommand(action) {
+            const steps = document.getElementById("steps").value;
+            const speed = document.getElementById("speed").value;
+            
+            fetch("/motor", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: action, steps: steps, speed: speed })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`伺服器回應: ${data.message}`);
+                updateFilterStatus();  // 更新濾鏡狀態，確保 UI 立即變更
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // 影像儲存
+        function saveimg() {
+            fetch('/saveimg', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.status === 'success' ? '影像儲存成功' : '影像儲存失敗');
+            })
+            .catch(error => {
+                alert('影像儲存失敗');
+                console.error(error);
+            });
+        }
+        function sync() {
+            const folder_name = document.getElementById("folder_name").value;
+            fetch('/sync', {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },  // 告知 Flask 這是 JSON
+                body: JSON.stringify({ folder_name: folder_name }) // 傳遞 JSON
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+
+        function shutdown() {
+            if (confirm('確定要關機嗎？')) {
+                fetch('/shutdown', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
     </script>
     
     
@@ -111,27 +135,33 @@
     /* 適用於行動裝置 */
     @media (max-width: 768px) {
         button {
-            font-size: 32px; /* 手機上字體更大 */
-            padding: 40px 80px; /* 增加按鈕大小 */
+            font-size: 72px; /* 手機上字體更大 */
+            padding: 80px 160px; /* 增加按鈕大小 */
         }
     }
 
     /* 讓表單內的 input 欄位也變大 */
     input[type="number"] {
-        font-size: 20px;
+        font-size: 38px;
         padding: 10px;
-        width: 100%;
-        max-width: 200px;
+        width: 400%;
+        max-width: 400px;
+    }
+    input[type="text"] {
+        font-size: 38px;
+        padding: 10px;
+        width: 400%;
+        max-width: 400px;
     }
 
     /* 讓整個畫面更適合手機 */
     body {
-        font-size: 24px;
+        font-size: 48px;
         text-align: center;
     }
 
     table {
-        margin: 15px auto; /* 讓表格置中 */
+        margin: 30px auto; /* 讓表格置中 */
         font-size: 24px;
     }
 </style>

@@ -81,7 +81,6 @@ def motor_control():
     
     try:
         subprocess.run(command, check=True)
-        
     except subprocess.CalledProcessError as e:
         print("馬達命令執行失敗：", e)
     return jsonify({"status": "success", "message": f"{action} 執行成功！步數: {steps}, 速度: {speed}"}),200
@@ -98,6 +97,39 @@ def saveimg():
     cam.save(colorfilter[item])
     print(colorfilter[item])
     return jsonify({'status': 'success', 'message': '影像已儲存'}), 200
+
+@app.route('/sync', methods=['POST'])
+def sync():
+    if request.content_type != "application/json":
+        return jsonify({'status': 'error', 'message': '請求格式錯誤，請使用 JSON'}), 415
+
+    data = request.get_json()
+    folder_name = data.get("folder_name", "default_backup")
+    print(folder_name)
+    if not folder_name:
+        return jsonify({'status': 'error', 'message': '請提供資料夾名稱'}), 400
+    subprocess.run(['pwd'])
+    base_path = "/home/defu/Pictures" 
+    local_path = "./Picture/*"  # 你的影像資料夾
+    new_path = f"{base_path}/{folder_name}"
+
+    try:
+        # 先在 NAS 上建立目錄
+        print("建立目錄")
+        try:
+            subprocess.run(["mkdir", new_path], check=True)
+        except:
+            pass
+        # 執行 rsync 備份
+        print("執行備份")
+        subprocess.run(f"cp -vr {local_path} {new_path}/", shell=True, check=True)
+        return jsonify({'status': 'success', 'message': f'備份成功'}), 500
+    except subprocess.CalledProcessError as e:
+        print("完成")
+        return jsonify({'status': 'error', 'message': f'備份失敗: {e}'}), 500
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    subprocess.run(f"echo 'begin0927' | sudo -S poweroff", shell=True, check=True)
 if __name__ == '__main__':
     try:
         # 若硬體容易受多進程存取影響，建議關閉自動重載

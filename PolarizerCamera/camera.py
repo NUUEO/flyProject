@@ -1,6 +1,8 @@
 import cv2
 import PySpin
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import time
 
 class Camera(object):
@@ -36,7 +38,6 @@ class Camera(object):
             print("像素格式已設置為 Polarized8。")
         except PySpin.SpinnakerException as ex:
             print(f"設定像素格式錯誤: {ex}")
-
     def open_camera(self):
         if self.cam is None:
             return
@@ -67,7 +68,7 @@ class Camera(object):
             print(f"釋放系統實例錯誤: {ex}")
 
     def preview(self, image_result):
-        """
+        r"""
         使用 PySpin 提取四個偏振角度的影像，拼接並縮放後返回。
         """
         previewI0   = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I0)
@@ -83,6 +84,26 @@ class Camera(object):
         combined = np.vstack((row1, row2))
         resized = cv2.resize(combined, (612, 512))
         return resized
+
+    def stocks_preview(self,image_result):
+        previewS0 = PySpin.ImageUtilityPolarization_CreateStokesS0(image_result)
+        previewS1 = PySpin.ImageUtilityPolarization_CreateStokesS1(image_result)
+        previewS2 = PySpin.ImageUtilityPolarization_CreateStokesS2(image_result)
+        width = previewS0.GetWidth()
+        height = previewS0.GetHeight()
+        self.s0 = np.frombuffer(previewS0.GetData(), dtype=np.int16).reshape((height,width))
+        self.s1 = np.frombuffer(previewS1.GetData(), dtype=np.int16).reshape((height,width))
+        self.s2 = np.frombuffer(previewS2.GetData(), dtype=np.int16).reshape((height,width))
+        self.normalized_s0 = cv2.normalize(self.s0, None, 0, 255, cv2.NORM_MINMAX).astype(np.float16)
+        self.normalized_s1 = cv2.normalize(self.s1, None, -1, 1, cv2.NORM_MINMAX).astype(np.float16)
+        self.normalized_s2 = cv2.normalize(self.s2, None, -1, 1, cv2.NORM_MINMAX).astype(np.float16)
+        stokes = np.hstack((self.s0, self.s1, self.s2))
+        stokes_resized = cv2.resize(stokes, (918 , 256))
+        normalized = cv2.normalize(stokes_resized, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        # 套用 JET colormap
+        jet_colormap = cv2.applyColorMap(normalized, cv2.COLORMAP_JET)
+        return jet_colormap
+
 
     def http_frames(self):
         if self.cam is None:
@@ -133,10 +154,17 @@ class Camera(object):
         cv2.imwrite(f"./Picture/{colorfilter}_i90_image.png", self.i90)  # 存成 PNG
         cv2.imwrite(f"./Picture/{colorfilter}_i45_image.png", self.i45)  # 存成 PNG
         cv2.imwrite(f"./Picture/{colorfilter}_i135_image.png", self.i135)  # 存成 PNG
+        np.save(f"./Picture/{colorfilter}S0.npy", self.normalized_s0)
+        np.save(f"./Picture/{colorfilter}S1.npy", self.normalized_s1)
+        np.save(f"./Picture/{colorfilter}S2.npy", self.normalized_s2)
+        
+
 
 # 若在測試環境（有螢幕的電腦）可使用下面程式來測試相機
 if __name__ == '__main__':
+
     cam = Camera()
+
     cam.set_polarized8_format()
     cam.open_camera()
     while True:
@@ -149,9 +177,16 @@ if __name__ == '__main__':
             image_result.Release()
             continue
         frame = cam.preview(image_result)
+        stock = cam.stocks_preview(image_result)
         image_result.Release()
+
+
         cv2.imshow("Camera Preview", frame)
+        cv2.imshow("Stokes Preview", stock)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+        elif cv2.waitKey(1) & 0xFF == ord('s'):
+            cam.save(f"{input('請輸入檔名：')}")
+
     cam.close_camera()
     cv2.destroyAllWindows()

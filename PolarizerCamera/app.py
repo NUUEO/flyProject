@@ -9,7 +9,7 @@ app = Flask(__name__)
 # 全域變數：延遲初始化相機實例
 camera_instance = None
 item = 0
-colorfilter = ['close','None','red','yellow','green','blue']
+colorfilter = ['Init','Red','Green','Blue','Visible','None']
 def get_camera():
     global camera_instance
     

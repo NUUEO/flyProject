@@ -6,51 +6,52 @@
 </head>
 
 <body>
-    <h3>實時影像串流</3>
-    <div>
-        <label for="current_filter">目前濾鏡狀態：</label>
-        <p id="current_filter">{{ colorfilter[item] }}</p>
-        <label for="folder_name">備份資料夾名稱：</label>
-        <input type="text" id="folder_name" placeholder="請輸入資料夾名稱">
+    <div class="main-content">
+        <!-- 左側：影像串流區 -->
+        <div class="video-section">
+
+            <table border="1">
+                <tr>
+                    <th>I0</th>
+                    <th>I90</th>
+                </tr>
+                <tr>
+                    <th>I45</th>
+                    <th>I135</th>
+                </tr>
+            </table>
+            <img src="{{ url_for('video_feed') }}" width="612" height="512" class="video-img"/>
+            <br>
+        </div>
+        <!-- 右側：馬達控制區 -->
+        <div class="motor-section">
+            <label for="current_filter">目前濾鏡狀態：</label>
+            <p id="current_filter">{{ colorfilter[item] }}</p>
+            <label for="folder_name">備份資料夾名稱：</label>
+            <input type="text" id="folder_name" placeholder="請輸入資料夾名稱">
+            <button class="button stop" onclick="saveimg()">拍攝影像</button>
+            <button type="button" onclick="sync()">備份</button>
+            <br>
+        
+            <form id="motor-form">
+                <div>
+                    <label for="steps">步數：</label>
+                    <input type="number" id="steps" name="steps" value="{{ steps }}">
+                </div>
+                <div>
+                    <label for="speed">轉速：</label>
+                    <input type="number" id="speed" name="speed" value="{{ speed }}">
+                </div>
+                <br>
+                <!-- 按鈕不再提交表單，而是透過 JavaScript 傳送 AJAX 請求 -->
+                <button type="button" onclick="sendMotorCommand('reverse')">反轉</button>
+                <button type="button" onclick="sendMotorCommand('forward')">正轉</button>
+                <button type="button" onclick="sendMotorCommand('Previous')">上一個</button>
+                <button type="button" onclick="sendMotorCommand('Next')">下一個</button>
+                <button type="button" onclick="shutdown()">關機</button>
+            </form>
+        </div>
     </div>
-    <button class="button stop" onclick="saveimg()">拍攝影像</button>
-    <button type="button" onclick="sync()">備份</button>
-    <br>
-    <table border="1">
-        <tr>
-            <th>I0</th>
-            <th>I90</th>
-        </tr>
-        <tr>
-            <th>I45</th>
-            <th>I135</th>
-        </tr>
-    </table>
-    <img src="{{ url_for('video_feed') }}" width="612" height="512" />
-    <br>
-    
-    <h3>馬達控制介面</h3>
-    
-    <form id="motor-form">
-        <div>
-            <label for="steps">步數 (-s)：</label>
-            <input type="number" id="steps" name="steps" value="{{ steps }}">
-        </div>
-        <div>
-            <label for="speed">轉速 (-p, pps)：</label>
-            <input type="number" id="speed" name="speed" value="{{ speed }}">
-        </div>
-        <br>
-        <!-- 按鈕不再提交表單，而是透過 JavaScript 傳送 AJAX 請求 -->
-        <button type="button" onclick="sendMotorCommand('reverse')">反轉</button>
-        <button type="button" onclick="sendMotorCommand('forward')">正轉</button>
-        <br>
-        <button type="button" onclick="sendMotorCommand('Previous')">上一個</button>
-        <button type="button" onclick="sendMotorCommand('Next')">下一個</button>
-    
-        <br>
-        <button type="button" onclick="shutdown()">關機</button>
-    </form>
     
     <script>
         function updateFilterStatus() {
@@ -125,10 +126,10 @@
 <style>
     /* 全局按鈕樣式 */
     button {
-        font-size: 20px; /* 文字變大 */
+        font-size: 18px; /* 文字變大 */
         padding: 15px 30px; /* 按鈕內部間距 */
         width: 100%; /* 讓按鈕在小螢幕上更容易點擊 */
-        max-width: 300px; /* 避免太寬 */
+        max-width: 130px; /* 避免太寬 */
         margin: 10px 0; /* 增加間距 */
         border-radius: 10px; /* 圓角讓按鈕更好看 */
     }
@@ -163,6 +164,57 @@
     table {
         margin: 30px auto; /* 讓表格置中 */
         font-size: 24px;
+    }
+
+    /* 1. 先給主要內容一個容器 */
+    .main-content {
+      display: flex;
+      flex-direction: row;   /* 桌面預設左右排列 */
+      gap: 32px;             /* 欄位間距 */
+      justify-content: center;
+      align-items: flex-start;
+      margin: 40px auto;
+      max-width: 1200px;
+    }
+
+    /* 2. 手機版改為上下排列 */
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+        gap: 16px;
+        max-width: 100%;
+      }
+    }
+
+    @media (min-width: 1200px) and (max-width: 3840px) {
+      body {
+        font-size: 18px; /* 提高字體大小，提升可讀性 */
+        max-width: 1400px; /* 內容區域不超過 1400px，兩側留白 */
+        margin: 0 auto;
+      }
+
+      .main-content {
+        display: flex;
+        gap: 16px; /* 增加欄位間距 */
+      }
+
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+    }
+
+    .video-section {
+        max-width: 650px; /* 或你希望的最大寬度 */
+        width: 100%;
+    }
+
+    .video-img {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
     }
 </style>
 

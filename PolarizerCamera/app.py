@@ -114,22 +114,18 @@ def sync():
     new_path = f"{base_path}/{folder_name}"
 
     try:
-        # 先在 NAS 上建立目錄
         print("建立目錄")
         try:
             subprocess.run(["mkdir", new_path], check=True)
         except:
             pass
-        # 執行 rsync 備份
+        # 執行 cp 備份
         print("執行備份")
         subprocess.run(f"cp -vr {local_path} {new_path}/", shell=True, check=True)
         return jsonify({'status': 'success', 'message': f'備份成功'}), 500
     except subprocess.CalledProcessError as e:
         print("完成")
         return jsonify({'status': 'error', 'message': f'備份失敗: {e}'}), 500
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    subprocess.run(f"echo 'begin0927' | sudo -S poweroff", shell=True, check=True)
 if __name__ == '__main__':
     try:
         # 若硬體容易受多進程存取影響，建議關閉自動重載

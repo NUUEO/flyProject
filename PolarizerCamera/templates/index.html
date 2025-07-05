@@ -2,25 +2,14 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>馬達控制介面</title>
+    <title>偏振相機量測系統</title>
 </head>
 
 <body>
     <div class="main-content">
         <!-- 左側：影像串流區 -->
         <div class="video-section">
-
-            <table border="1">
-                <tr>
-                    <th>I0</th>
-                    <th>I90</th>
-                </tr>
-                <tr>
-                    <th>I45</th>
-                    <th>I135</th>
-                </tr>
-            </table>
-            <img src="{{ url_for('video_feed') }}" width="612" height="512" class="video-img"/>
+            <img src="{{ url_for('video_feed') }}" width="1280" height="1024" class="video-img"/>
             <br>
         </div>
         <!-- 右側：馬達控制區 -->
@@ -49,8 +38,6 @@
                 <br>
                 <button type="button" onclick="sendMotorCommand('Previous')">上一個</button>
                 <button type="button" onclick="sendMotorCommand('Next')">下一個</button>
-                <br>
-                <button type="button" onclick="shutdown()">關機</button>
             </form>
         </div>
     </div>
@@ -107,18 +94,6 @@
                 alert(data.message);
             })
             .catch(error => console.error('Error:', error));
-        }
-
-
-        function shutdown() {
-            if (confirm('確定要關機嗎？')) {
-                fetch('/shutdown', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                })
-                .catch(error => console.error('Error:', error));
-            }
         }
     </script>
     
@@ -207,7 +182,7 @@
     }
 
     .video-section {
-        max-width: 650px; /* 或你希望的最大寬度 */
+        max-width: 1280px; /* 或你希望的最大寬度 */
         width: 100%;
     }
 

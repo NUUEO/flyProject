@@ -22,6 +22,8 @@ class Camera(object):
             print(f"初始化相機錯誤: {ex}")
             self.cam = None
 
+        self.number_of_images = 1
+
     def set_polarized8_format(self):
         if self.cam is None:
             return
@@ -72,17 +74,19 @@ class Camera(object):
         使用 PySpin 提取四個偏振角度的影像，拼接並縮放後返回。
         """
         previewI0   = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I0)
-        previewI45  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I45)
-        previewI90  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I90)
-        previewI135 = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I135)
+        self.raw = image_result
+        #previewI45  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I45)
+        #previewI90  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I90)
+        #previewI135 = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I135)
         self.i0 = previewI0.GetNDArray()
-        self.i45 = previewI45.GetNDArray()
-        self.i90 = previewI90.GetNDArray()
-        self.i135 = previewI135.GetNDArray()
-        row1 = np.hstack((self.i0, self.i90))
-        row2 = np.hstack((self.i45, self.i135))
-        combined = np.vstack((row1, row2))
-        resized = cv2.resize(combined, (612, 512))
+        #self.i45 = previewI45.GetNDArray()
+        #self.i90 = previewI90.GetNDArray()
+        #self.i135 = previewI135.GetNDArray()
+        
+        #row1 = np.hstack((self.i0, self.i90))
+        #row2 = np.hstack((self.i45, self.i135))
+        #combined = np.vstack((row1, row2))
+        resized = cv2.resize(self.i0, (612, 512))
         return resized
 
     def stocks_preview(self,image_result):
@@ -150,13 +154,18 @@ class Camera(object):
     def save(self, colorfilter):
         # 實作儲存影像的邏輯
         print("儲存影像功能被呼叫。")
+        self.raw.Save(f"./Picture/{colorfilter}_raw_image_{self.number_of_images}.tiff")  # 儲存原始 Polarized8 影像
+        self.number_of_images += 1
+        """
         cv2.imwrite(f"./Picture/{colorfilter}_i0_image.png", self.i0)  # 存成 PNG
+        
         cv2.imwrite(f"./Picture/{colorfilter}_i90_image.png", self.i90)  # 存成 PNG
         cv2.imwrite(f"./Picture/{colorfilter}_i45_image.png", self.i45)  # 存成 PNG
         cv2.imwrite(f"./Picture/{colorfilter}_i135_image.png", self.i135)  # 存成 PNG
         np.save(f"./Picture/{colorfilter}S0.npy", self.normalized_s0)
         np.save(f"./Picture/{colorfilter}S1.npy", self.normalized_s1)
         np.save(f"./Picture/{colorfilter}S2.npy", self.normalized_s2)
+        """
         
 
 

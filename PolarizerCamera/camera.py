@@ -73,20 +73,25 @@ class Camera(object):
         r"""
         使用 PySpin 提取四個偏振角度的影像，拼接並縮放後返回。
         """
+        choice = 0  # 0: Single, 1: Quadrant
         previewI0   = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I0)
-        self.raw = image_result
-        #previewI45  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I45)
-        #previewI90  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I90)
-        #previewI135 = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I135)
         self.i0 = previewI0.GetNDArray()
-        #self.i45 = previewI45.GetNDArray()
-        #self.i90 = previewI90.GetNDArray()
-        #self.i135 = previewI135.GetNDArray()
+        if choice == 1:
+            
+            previewI45  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I45)
+            previewI90  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I90)
+            previewI135 = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I135)
+            
+            self.i45 = previewI45.GetNDArray()
+            self.i90 = previewI90.GetNDArray()
+            self.i135 = previewI135.GetNDArray()
+            row1 = np.hstack((self.i0, self.i90))
+            row2 = np.hstack((self.i45, self.i135))
+            combined = np.vstack((row1, row2))
+            resized = cv2.resize(combined, (612, 512))
+        elif choice ==  0:
+            resized = cv2.resize(self.i0, (612, 512))
         
-        #row1 = np.hstack((self.i0, self.i90))
-        #row2 = np.hstack((self.i45, self.i135))
-        #combined = np.vstack((row1, row2))
-        resized = cv2.resize(self.i0, (612, 512))
         return resized
 
     def stocks_preview(self,image_result):

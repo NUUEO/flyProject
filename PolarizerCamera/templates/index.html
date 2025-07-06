@@ -3,12 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <title>偏振相機量測系統</title>
+    <!--
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          text-align: center;
+        }
+    
+        table {
+          margin: 0 auto 20px auto;
+          border-collapse: collapse;
+          width: 90%;
+          max-width: 300px; /* 限制表格最大寬度 */
+        }
+    
+        th, td {
+          border: 1px solid black;
+          padding: 5px;
+          height: 5px;
+          word-break: break-word;
+        }
+    
+        .video-section {
+          margin: 20px auto;
+          width: 90%;
+          max-width: 1280px;
+        }
+    
+        .video-img {
+          width: 100%; /* 影片自適應寬度 */
+          height: auto;
+          border: 2px solid #333;
+        }
+      </style>
+      -->
 </head>
 
 <body>
     <div class="main-content">
-        <!-- 左側：影像串流區 -->
+
         <div class="video-section">
+                    <!--
+            <table>
+                <tr>
+                <th>0 度</th>
+                <th>90 度</th>
+                </tr>
+                <tr>
+                <th>45 度</th>
+                <th>135 度</th>
+                </tr>
+            </table>
+            表格區 -->
             <img src="{{ url_for('video_feed') }}" width="1280" height="1024" class="video-img"/>
             <br>
         </div>

@@ -76,6 +76,7 @@ class Camera(object):
         choice = 0  # 0: Single, 1: Quadrant
         previewI0   = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I0)
         self.i0 = previewI0.GetNDArray()
+        self.raw = image_result
         if choice == 1:
             
             previewI45  = PySpin.ImageUtilityPolarization.ExtractPolarQuadrant(image_result, PySpin.SPINNAKER_POLARIZATION_QUADRANT_I45)

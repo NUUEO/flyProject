@@ -122,7 +122,8 @@ def sync():
         # 執行 cp 備份
         print("執行備份")
         subprocess.run(f"cp -vr {local_path} {new_path}/", shell=True, check=True)
-        return jsonify({'status': 'success', 'message': f'備份成功'}), 500
+        subprocess.run(f"rsync -avz -e 'ssh -p 50000' {local_path} edward61221@home-taichung.myds.me:/volume1/Share/backup/", shell=True, check=True)
+        return jsonify({'status': 'success', 'message': f'備份成功'}), 200
     except subprocess.CalledProcessError as e:
         print("完成")
         return jsonify({'status': 'error', 'message': f'備份失敗: {e}'}), 500

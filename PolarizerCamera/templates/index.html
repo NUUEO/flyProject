@@ -60,6 +60,8 @@
             表格區 -->
             <img src="{{ url_for('video_feed') }}" width="1280" height="1024" class="video-img"/>
             <br>
+            <!-- 手機專用拍攝按鈕 -->
+            <button class="button stop capture-btn-mobile" onclick="saveimg()">拍攝</button>
         </div>
         <!-- 右側：馬達控制區 -->
         <div class="motor-section">
@@ -67,7 +69,7 @@
             <p id="current_filter">{{ colorfilter[item] }}</p>
             <label for="folder_name">備份資料夾名稱：</label>
             <input type="text" id="folder_name" placeholder="請輸入資料夾名稱">
-            <button class="button stop" onclick="saveimg()">拍攝</button>
+            <button class="button stop capture-btn-desktop" onclick="saveimg()">拍攝</button>
             <button type="button" onclick="sync()">備份</button>
             <br>
         
@@ -87,7 +89,12 @@
                 <br>
                 <button type="button" onclick="sendMotorCommand('Previous')">上一個</button>
                 <button type="button" onclick="sendMotorCommand('Next')">下一個</button>
+                <br>
+                <!-- ...existing code... -->
+                <button type="button" onclick="testSpeed()">測速</button>
+                <!-- ...existing code... -->
             </form>
+
         </div>
     </div>
     
@@ -121,30 +128,62 @@
 
         // 影像儲存
         function saveimg() {
+            document.getElementById('loading-mask').style.display = 'flex';
             fetch('/saveimg', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
+                document.getElementById('loading-mask').style.display = 'none';
                 alert(data.status === 'success' ? '影像儲存成功' : '影像儲存失敗');
             })
             .catch(error => {
+                document.getElementById('loading-mask').style.display = 'none';
                 alert('影像儲存失敗');
                 console.error(error);
             });
         }
+
         function sync() {
+            document.getElementById('loading-mask').style.display = 'flex';
             const folder_name = document.getElementById("folder_name").value;
             fetch('/sync', {
                 method: 'POST',
-                headers: { "Content-Type": "application/json" },  // 告知 Flask 這是 JSON
-                body: JSON.stringify({ folder_name: folder_name }) // 傳遞 JSON
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ folder_name: folder_name })
             })
             .then(response => response.json())
             .then(data => {
+                document.getElementById('loading-mask').style.display = 'none';
                 alert(data.message);
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                document.getElementById('loading-mask').style.display = 'none';
+                alert('備份失敗');
+                console.error('Error:', error);
+            });
+        }
+
+        function testSpeed() {
+            document.getElementById('loading-mask').style.display = 'flex';
+            fetch('/iperf')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('loading-mask').style.display = 'none';
+                if(data.status === 'success') {
+                    alert("傳輸速率：" + data.output);
+                } else {
+                    alert("測速失敗：" + data.message);
+                }
+            })
+            .catch(err => {
+                document.getElementById('loading-mask').style.display = 'none';
+                alert("測速失敗");
+            });
         }
     </script>
+
+    <div id="loading-mask" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);color:white;font-size:3rem;align-items:center;justify-content:center;">
+        <div style="margin:auto;">載入中...</div>
+    </div>
     
     
 </body>
@@ -241,6 +280,38 @@
         display: block;
         margin: 0 auto;
         max-width: 100%;
+    }
+
+    /* 預設桌面：只顯示桌面版按鈕 */
+    .capture-btn-mobile { display: none; }
+    .capture-btn-desktop { display: inline-block; }
+
+    /* 手機：只顯示手機版按鈕 */
+    @media (max-width: 768px) {
+      .capture-btn-mobile { 
+        display: block; 
+        width: 100%;
+        font-size: 72px;
+        padding: 80px 0;
+        margin: 32px auto;      /* 讓上下有間距，左右自動置中 */
+        max-width: 600px;       /* 可視需求調整最大寬度 */
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .capture-btn-desktop { display: none; }
+    }
+
+    #loading-mask {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.4);
+      color: white;
+      font-size: 3rem;
+      align-items: center;
+      justify-content: center;
     }
 </style>
 

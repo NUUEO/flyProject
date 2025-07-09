@@ -3,6 +3,7 @@ import subprocess
 import os
 import time
 from camera import Camera
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -110,23 +111,53 @@ def sync():
         return jsonify({'status': 'error', 'message': '請提供資料夾名稱'}), 400
     subprocess.run(['pwd'])
     base_path = "/home/defu/Pictures" 
-    local_path = "./Picture/*"  # 你的影像資料夾
+    local_path = "/home/defu/flyProject/PolarizerCamera/Picture/*"  # 你的影像資料夾
     new_path = f"{base_path}/{folder_name}"
+    # 取得當前時間
+    now = datetime.now()
+    # 格式化為你指定的格式：YYYYMMDD_HHMM
+    formatted_time = now.strftime("%Y%m%d_%H%M%S")
 
     try:
         print("建立目錄")
         try:
             subprocess.run(["mkdir", new_path], check=True)
+            subprocess.run(["ssh", "-p", "50000", "edward61221@home-taichung.myds.me", "mkdir", "-p", f"/volume1/Share/偏振相機實驗/backup/{formatted_time}"], check=True)
         except:
             pass
         # 執行 cp 備份
         print("執行備份")
         subprocess.run(f"cp -vr {local_path} {new_path}/", shell=True, check=True)
-        subprocess.run(f"rsync -avz -e 'ssh -p 50000' {local_path} edward61221@home-taichung.myds.me:/volume1/Share/偏振相機實驗/backup/", shell=True, check=True)
+        subprocess.run(f"rsync -avz -e 'ssh -p 50000' {local_path} edward61221@home-taichung.myds.me:/volume1/Share/偏振相機實驗/backup/{formatted_time}", shell=True, check=True)
+        subprocess.run(f"rm -rf {local_path}", shell=True, check=True)
         return jsonify({'status': 'success', 'message': f'備份成功'}), 200
     except subprocess.CalledProcessError as e:
         print("完成")
         return jsonify({'status': 'error', 'message': f'備份失敗: {e}'}), 500
+
+@app.route('/iperf', methods=['GET'])
+def iperf_test():
+    try:
+        # 執行 iperf3 測速
+        result = subprocess.run(
+            ["iperf3", "-c", "home-taichung.myds.me", "-t", "3"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=10,
+            text=True
+        )
+        output = result.stdout
+        # 解析最後一行的 Bitrate
+        lines = output.strip().split('\n')
+        summary = ""
+        for line in reversed(lines):
+            if "sender" in line or "receiver" in line:
+                summary = line
+                break
+        return jsonify({'status': 'success', 'output': summary, 'raw': output})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 if __name__ == '__main__':
     try:
         # 若硬體容易受多進程存取影響，建議關閉自動重載
